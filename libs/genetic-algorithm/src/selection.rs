@@ -20,7 +20,7 @@ impl RouletteWheelSelection {
 
 impl SelectionMethod for RouletteWheelSelection {
 
-    fn select<'a, I>(&mut self, rng: &mut dyn RngCore, mut population: &'a mut[I]) -> &'a I
+    fn select<'a, I>(&mut self, rng: &mut dyn RngCore, population: &'a mut[I]) -> &'a I
     where
         I: Individual,
     {
@@ -63,7 +63,8 @@ impl SelectionMethod for RankSelection {
                 population.sort_by(|a, b| a.fitness().partial_cmp(&b.fitness()).unwrap()); // Sort the population by fitness in ascending order
                 self.is_sorted = true;   // Set is_sorted to true
             }
-            let total_fitness: f64 = (1..=population.len()).sum::<usize>() as f64; // Calculate the total fitness of the population as the sum of all ranks
+            let total_fitness: f64 = (1..=population.len()).sum::<usize>() as f64; 
+            // Calculate the total fitness of the population as the sum of all ranks
             // Choose an individual from the population using weighted random selection,
             // where the weight of each individual is its rank divided by the total fitness of the population
             population
