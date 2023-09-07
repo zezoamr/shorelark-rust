@@ -8,6 +8,7 @@ mod chromosome;
 mod crossover;
 mod individual;
 mod selection;
+mod mutation;
 
 
 pub struct GeneticAlgorithm<S> {
@@ -23,19 +24,22 @@ where
         Self { selection_method, crossover_method: Box::new(crossover_method), }
     }
 
-    pub fn evolve<I>(&mut self, rng: &mut dyn RngCore, population: & mut[I]) -> Vec<I>
+    pub fn evolve<I>(&mut self, rng: &mut dyn RngCore, mut population: &mut [I]) -> Vec<I>
     where
         I: Individual,
     {
         assert!(!population.is_empty());
+        self.selection_method.set_not_sorted_population();
 
         (0..population.len())
             .map(|_| {
+                self.selection_method.sort(&mut population);
+
                 let parent_a = self.selection_method.select(rng, population).chromosome();
 
                 let parent_b = self.selection_method.select(rng, population).chromosome();
 
-                let mut child = self.crossover_method.crossover(rng, parent_a, parent_b);
+                let child = self.crossover_method.crossover(rng, parent_a, parent_b);
                 
                 // TODO mutation
                 // TODO convert `Chromosome` back into `Individual`

@@ -4,9 +4,15 @@ use rand::{seq::SliceRandom, RngCore};
 use crate::*;
 
 pub trait SelectionMethod {
-    fn select<'a, I>(&mut self, rng: &mut dyn RngCore, population: &'a mut[I]) -> &'a I
+    fn select<'a, I>(&mut self, rng: &mut dyn RngCore, population: &'a[I]) -> &'a I
     where
         I: Individual;
+
+    fn sort<'a, I>(&mut self, population: &mut [I]) -> &Self
+    where
+        I: Individual;
+    fn set_sorted_population(&mut self) -> &Self;
+    fn set_not_sorted_population(&mut self) -> &Self;
 }
 
 #[derive(Clone, Debug)]
@@ -20,13 +26,24 @@ impl RouletteWheelSelection {
 
 impl SelectionMethod for RouletteWheelSelection {
 
-    fn select<'a, I>(&mut self, rng: &mut dyn RngCore, population: &'a mut[I]) -> &'a I
+    fn select<'a, I>(&mut self, rng: &mut dyn RngCore, population: &'a[I]) -> &'a I
     where
         I: Individual,
     {
             population
                 .choose_weighted(rng, |individual| individual.fitness())
                 .expect("got an empty population")
+    }
+    fn sort<'a, I>(&mut self, population: &mut [I]) -> &Self
+        where
+            I: Individual {
+                self
+    }
+    fn set_sorted_population(&mut self) -> &Self {
+        self
+    }
+    fn set_not_sorted_population(&mut self) -> &Self {
+        self
     }
 }
 
@@ -41,28 +58,15 @@ impl RankSelection {
             is_sorted: false
         }
     }
-    pub fn set_sorted_population(&mut self) -> Self {
-        Self {
-            is_sorted: true
-        }
-    }
-    pub fn set_not_sorted_population(&mut self) -> Self {
-        Self {
-            is_sorted: false
-        }
-    }
 }
 
 impl SelectionMethod for RankSelection {
 
-    fn select<'a, I>(&mut self, rng: &mut dyn RngCore, population: &'a mut[I]) -> &'a I
+    fn select<'a, I>(&mut self, rng: &mut dyn RngCore, population: &'a[I]) -> &'a I
     where
         I: Individual,
         {
-            if !self.is_sorted {
-                population.sort_by(|a, b| a.fitness().partial_cmp(&b.fitness()).unwrap()); // Sort the population by fitness in ascending order
-                self.is_sorted = true;   // Set is_sorted to true
-            }
+            // assuming used sort method to sort population before here
             let total_fitness: f64 = (1..=population.len()).sum::<usize>() as f64; 
             // Calculate the total fitness of the population as the sum of all ranks
             // Choose an individual from the population using weighted random selection,
@@ -77,6 +81,26 @@ impl SelectionMethod for RankSelection {
                     rank as f64 / total_fitness // Calculate the selection probability of the individual as its rank divided by the total fitness of the population
                 })
                 .expect("got an empty population")
+        }
+
+        fn sort<'a, I>(&mut self, population: &mut [I]) -> &Self
+        where
+                I: Individual,
+            {
+                if !self.is_sorted {
+                    population.sort_by(|a, b| a.fitness().partial_cmp(&b.fitness()).unwrap()); // Sort the population by fitness in ascending order
+                    self.is_sorted = true; // Set is_sorted to true
+                }
+                self.set_sorted_population();
+                self
+            }
+        fn set_sorted_population(&mut self) -> &Self {
+            self.is_sorted = true;
+            self
+        }
+        fn set_not_sorted_population(&mut self) -> &Self {
+            self.is_sorted = false;
+            self
         }
 }
 
@@ -97,6 +121,7 @@ mod tests {
             #[test]
             fn test() {
                 let mut method: RouletteWheelSelection = RouletteWheelSelection::new();
+                method.set_not_sorted_population();
                 let mut rng = ChaCha8Rng::from_seed(Default::default());
 
                 let mut population = vec![
@@ -110,8 +135,8 @@ mod tests {
 
 
                 for _ in 0..1000 {
-                    let fitness = method
-                        .select(&mut rng, &mut population)
+                    method.sort(&mut population);
+                    let fitness = method.select(&mut rng, &population)
                         .fitness() as i32;
 
                     *actual_histogram
@@ -145,6 +170,7 @@ mod tests {
             #[test]
             fn test() {
                 let mut method: RankSelection = RankSelection::new();
+                method.set_not_sorted_population();
                 let mut rng = ChaCha8Rng::from_seed(Default::default());
 
                 let mut population = vec![
@@ -157,10 +183,9 @@ mod tests {
                 let mut actual_histogram = BTreeMap::new();
 
                 for _ in 0..1000 {
-                    let fitness = method
-                        .select(&mut rng, &mut population)
+                    method.sort(&mut population);
+                    let fitness = method.select(&mut rng, &population)
                         .fitness() as i32;
-                    method.set_sorted_population();
 
                     *actual_histogram
                         .entry(fitness)
