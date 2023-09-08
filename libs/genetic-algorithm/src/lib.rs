@@ -1,15 +1,15 @@
+pub use self::{
+    chromosome::*, crossover::*, individual::*, mutation::*, selection::*,
+};
 
-use crossover::CrossoverMethod;
-use individual::Individual;
-use mutation::MutationMethod;
 use rand::RngCore;
-use selection::SelectionMethod;
 
 mod chromosome;
 mod crossover;
 mod individual;
 mod selection;
 mod mutation;
+
 
 
 pub struct GeneticAlgorithm<S> {

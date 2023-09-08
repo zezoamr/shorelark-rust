@@ -37,6 +37,40 @@ impl Network {
             .iter()
             .fold(inputs, |inputs, layer| layer.propagate(inputs))
     }
+
+    pub(crate) fn new(layers: Vec<Layer>) -> Self {
+        Self { layers }
+    }
+
+    pub fn weights(&self) -> Vec<f32> {
+        let mut weights = Vec::new();
+
+        for layer in &self.layers {
+            for neuron in &layer.neurons {
+                weights.push(neuron.bias);
+
+                for weight in &neuron.weights {
+                    weights.push(*weight);
+                }
+            }
+        }
+
+        weights
+    }
+
+    pub fn from_weights(layers: &[LayerTopology], mut weights: impl IntoIterator<Item = f32>) -> Self {
+        assert!(layers.len() > 1);
+        let mut weights = weights.into_iter();
+        let layers = layers
+            .windows(2)
+            .map(|layers| Layer::from_weights(layers[0].neurons, layers[1].neurons, &mut weights))
+            .collect();
+        if weights.next().is_some() {
+            panic!("got too many weights");
+        }
+        Self { layers }
+    }
+
 }
 
 impl Layer {
@@ -52,6 +86,23 @@ impl Layer {
             .iter()
             .map(|neuron| neuron.propagate(&inputs))
             .collect()
+    }
+
+    pub fn new(neurons: Vec<Neuron>) -> Self {
+        assert!(!neurons.is_empty());
+
+        assert!(neurons
+            .iter()
+            .all(|neuron| neuron.weights.len() == neurons[0].weights.len()));
+
+        Self { neurons }
+    }
+
+    pub fn from_weights( input_neurons: usize, output_neurons: usize, weights: &mut dyn Iterator<Item = f32>,) -> Self {
+        let neurons = (0..output_neurons)
+            .map(|_| Neuron::from_weights(input_neurons, weights))
+            .collect();
+        Self { neurons }
     }
 }
 
@@ -76,6 +127,26 @@ impl Neuron {
         // adding bias and doing relu activation function
         (self.bias + output).max(0.0)
     }
+
+    pub fn new(bias: f32, weights: Vec<f32>) -> Self {
+        assert!(!weights.is_empty());
+
+        Self { bias, weights }
+    }
+
+    pub fn from_weights(
+        output_neurons: usize,
+        weights: &mut dyn Iterator<Item = f32>,
+    ) -> Self {
+        let bias = weights.next().expect("got not enough weights");
+
+        let weights = (0..output_neurons)
+            .map(|_| weights.next().expect("got not enough weights"))
+            .collect();
+
+        Self { bias, weights }
+    }
+
 }
 
 
@@ -130,4 +201,46 @@ mod tests {
             }
         }
     }
+
+    mod weights {
+        use super::*;
+
+        #[test]
+        fn test() {
+            let network = Network::new(vec![
+                Layer::new(vec![Neuron::new(0.1, vec![0.2, 0.3, 0.4])]),
+                Layer::new(vec![Neuron::new(0.5, vec![0.6, 0.7, 0.8])]),
+            ]);
+
+            let actual = network.weights();
+            let expected = vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8];
+
+            approx::assert_relative_eq!(
+                actual.as_slice(),
+                expected.as_slice(),
+            );
+        }
+        mod from_weights {
+            use super::*;
+    
+            #[test]
+            fn test() {
+                let layers = &[
+                    LayerTopology { neurons: 3 },
+                    LayerTopology { neurons: 2 },
+                ];
+    
+                let weights = vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8];
+    
+                let network = Network::from_weights(layers, weights.clone());
+                let actual: Vec<_> = network.weights();
+    
+                approx::assert_relative_eq!(
+                    actual.as_slice(),
+                    weights.as_slice(),
+                );
+            }
+        }
+    }
+
 }
