@@ -4,7 +4,9 @@ const simulation = new sim.Simulation();
 const world = simulation.world();
 console.log(world);
 
-
+document.getElementById('train').onclick = function() {
+    simulation.train();
+};
 const viewport = document.getElementById('viewport');
 const ctxt = viewport.getContext('2d');
 const viewportWidth = viewport.width;
