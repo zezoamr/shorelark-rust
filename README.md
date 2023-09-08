@@ -5,7 +5,7 @@ simulation built with neural networks and genetic algorithms ( about birds :) ) 
 to run:
 
 ```
-install wasm-pack
+1694209178207install wasm-pack
 cd  libs/simulation-wasm
 wasm-pack build --release
 cd ../..
@@ -17,4 +17,4 @@ npm run start
 
 it will run on localhost:8080
 
-![1694209178207](image/README/1694209178207.png)
+![1694209404254](image/README/1694209404254.png)
