@@ -4,19 +4,23 @@
     <meta charset="utf-8">
     <title>Shorelark</title>
   </head>
-  <style>
-    body {
-      background: #1f2639;
-    }
-    #train {
-      position: absolute;
-      top: 0;
-      margin: 15px;
-    }
-  </style>
+  <link rel="stylesheet" href="./index.css"/>
   <body>
-    <canvas id="viewport" width="800" height="800"></canvas>
-    <button id="train">train please, thank u</button>
+    <div id="container">
+      <div id="logo"></div>
+      <div id="terminal-panel" class="panel">
+        <button id="train">train once</button>
+        <button id="trainten">train ten times</button>
+        <button id="train100">train 100 times</button>
+        <button id="reset">reset</button>
+        <button id="roulettewheel">use roulettewheel selection</button>
+        <button id="rank">use rank selection</button>
+        <div id="messages"></div>
+      </div>
+      <div id="viewport-panel" class="panel">
+        <canvas id="viewport" width="680" height="680"></canvas>
+      </div>
+    </div>
     <script src="./bootstrap.js"></script>
   </body>
 </html>

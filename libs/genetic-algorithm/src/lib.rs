@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 pub use self::{
     chromosome::*, crossover::*, individual::*, mutation::*, selection::*,
 };
@@ -9,8 +11,6 @@ mod crossover;
 mod individual;
 mod selection;
 mod mutation;
-
-
 
 pub struct GeneticAlgorithm<S> {
     selection_method: S,
@@ -26,14 +26,14 @@ where
         Self { selection_method, crossover_method: Box::new(crossover_method), mutation_method: Box::new(mutation_method), }
     }
 
-    pub fn evolve<I>(&mut self, rng: &mut dyn RngCore, mut population: &mut [I]) -> Vec<I>
+    pub fn evolve<I>(&mut self, rng: &mut dyn RngCore, mut population: &mut [I]) -> (Vec<I>, Statistics)
     where
-        I: Individual,
+        I: Individual + Clone,
     {
         assert!(!population.is_empty());
         self.selection_method.set_not_sorted_population();
 
-        (0..population.len())
+        let new_population = (0..population.len())
             .map(|_| {
                 self.selection_method.sort(&mut population);
 
@@ -48,10 +48,72 @@ where
                 I::create(child)
 
             })
-            .collect()
+            .collect();
+        let stats = Statistics::new(population);
+
+        (new_population, stats)
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct Statistics {
+    min_fitness: f32,
+    max_fitness: f32,
+    avg_fitness: f32,
+    median_fitness: f32,
+}
+
+impl Statistics {
+    fn new<I>(population: &[I]) -> Self
+    where
+        I: Individual + Clone,
+    {
+        assert!(!population.is_empty());
+
+        let mut min_fitness = population[0].fitness();
+        let mut max_fitness = min_fitness;
+        let mut sum_fitness = 0.0;
+        
+        let mut sorted_population = population.clone().to_vec();
+        sorted_population.sort_by(|a, b| a.fitness().partial_cmp(&b.fitness()).unwrap_or(Ordering::Equal));
+
+        let median_fitness = if sorted_population.len() % 2 == 0 {
+            (sorted_population[sorted_population.len() / 2].fitness() + sorted_population[sorted_population.len() / 2 - 1].fitness()) / 2.0
+        } else {
+            sorted_population[sorted_population.len() / 2].fitness()
+        };
+
+        for individual in population {
+            let fitness = individual.fitness();
+
+            min_fitness = min_fitness.min(fitness);
+            max_fitness = max_fitness.max(fitness);
+            sum_fitness += fitness;
+        }
+
+        Self {
+            min_fitness,
+            max_fitness,
+            avg_fitness: sum_fitness / (population.len() as f32),
+            median_fitness,
+        }
+    }
+
+    pub fn min_fitness(&self) -> f32 {
+        self.min_fitness
+    }
+
+    pub fn max_fitness(&self) -> f32 {
+        self.max_fitness
+    }
+
+    pub fn avg_fitness(&self) -> f32 {
+        self.avg_fitness
+    }
+    pub fn median_fitness(&self) -> f32 {
+        self.median_fitness
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -93,7 +155,7 @@ mod tests {
         // that'd change is the *magnitude* of difference between
         // initial and output population.
         for _ in 0..10 {
-            population = ga.evolve(&mut rng, &mut population);
+            (population, _) = ga.evolve(&mut rng, &mut population);
         }
 
         let expected_population = vec![
@@ -131,7 +193,7 @@ mod tests {
         // that'd change is the *magnitude* of difference between
         // initial and output population.
         for _ in 0..10 {
-            population = ga.evolve(&mut rng, &mut population);
+            (population, _) = ga.evolve(&mut rng, &mut population);
         }
 
         //let expected_population = vec![

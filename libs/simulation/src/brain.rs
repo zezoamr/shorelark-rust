@@ -2,7 +2,7 @@ use ga::Chromosome;
 
 use crate::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Brain {
     pub(crate) nn: nn::Network,
 }

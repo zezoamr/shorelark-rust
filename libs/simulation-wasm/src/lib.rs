@@ -4,17 +4,17 @@ use wasm_bindgen::prelude::*;
 use serde::Serialize;
 
 #[wasm_bindgen]
-pub struct Simulation {
+pub struct RouletteSimulation {
     rng: ThreadRng,
-    sim: sim::Simulation,
+    sim: sim::RouletteSimulation,
 }
 
 #[wasm_bindgen]
-impl Simulation {
+impl RouletteSimulation {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
         let mut rng = thread_rng();
-        let sim = sim::Simulation::random(&mut rng);
+        let sim = sim::RouletteSimulation::random(&mut rng);
 
         Self { rng, sim }
     }
@@ -25,8 +25,51 @@ impl Simulation {
     pub fn step(&mut self) {
         self.sim.step(&mut self.rng);
     }
-    pub fn train(&mut self) {
-        self.sim.train(&mut self.rng);
+    pub fn train(&mut self) -> String {
+        let stats = self.sim.train(&mut self.rng);
+
+        format!(
+            "min={:.2}, max={:.2}, avg={:.2} median={:.2}",
+            stats.min_fitness(),
+            stats.max_fitness(),
+            stats.avg_fitness(),
+            stats.median_fitness()
+        )
+    }
+}
+
+#[wasm_bindgen]
+pub struct RankSimulation{
+    rng: ThreadRng,
+    sim: sim::RankSimulation,
+}
+
+#[wasm_bindgen]
+impl RankSimulation {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Self {
+        let mut rng = thread_rng();
+        let sim = sim::RankSimulation::random(&mut rng);
+
+        Self { rng, sim }
+    }
+    pub fn world(&self) -> JsValue {
+        let world = World::from(self.sim.world());
+        serde_wasm_bindgen::to_value(&world).unwrap()
+    }
+    pub fn step(&mut self) {
+        self.sim.step(&mut self.rng);
+    }
+    pub fn train(&mut self) -> String {
+        let stats = self.sim.train(&mut self.rng);
+
+        format!(
+            "min={:.2}, max={:.2}, avg={:.2} median={:.2}",
+            stats.min_fitness(),
+            stats.max_fitness(),
+            stats.avg_fitness(),
+            stats.median_fitness()
+        )
     }
 }
 
@@ -94,4 +137,4 @@ impl From<&sim::Food> for Food {
     }
 }
 
-// to build wasm-pack build
+// to build wasm-pack build or wasm-pack build --release

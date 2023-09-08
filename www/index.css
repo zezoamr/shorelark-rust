@@ -1,0 +1,83 @@
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+}
+
+.panel {
+    display: flex;
+    padding: 1em;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    background: #1f2639;
+}
+
+#container {
+    display: flex;
+}
+
+#terminal-panel {
+    width: 455px;
+    flex-direction: column;
+}
+
+#viewport-panel {
+    flex-grow: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+}
+
+
+
+#messages {
+    margin-top: 1em;
+    max-height: 400px; 
+    overflow-y: auto;
+}
+
+#messages p {
+    margin: 0;
+    padding: 0.5em;
+    background-color: #fff;
+    color: #333;
+    border-radius: 5px;
+    font-family: sans-serif;
+}
+
+#messages p:nth-child(odd) {
+    background-color: #f0f0f0;
+}
+
+button {
+    background-color: #f0f0f0; 
+    border: none; /* Remove borders */
+    color: black; 
+    padding: 15px 32px; /* Some padding */
+    text-align: center; /* Centered text */
+    text-decoration: none; /* Remove underline */
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer; /* Mouse pointer on hover */
+    border-radius: 12px; /* Rounded corners */
+}
+
+button:hover {
+    background-color: #bfcc74; 
+}
+
+#logo {
+    white-space: pre; /* Preserve white space characters */
+    font-family: monospace; /* Use a monospace font for better alignment */
+    color:white;
+}

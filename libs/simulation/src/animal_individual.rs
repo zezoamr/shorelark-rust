@@ -1,5 +1,6 @@
 use crate::*;
 
+#[derive(Clone, Debug)]
 pub struct AnimalIndividual {
     pub(crate) fitness: f32,
     pub(crate) chromosome: ga::Chromosome,

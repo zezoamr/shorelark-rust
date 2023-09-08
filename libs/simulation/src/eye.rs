@@ -15,7 +15,7 @@ const FOV_ANGLE: f32 = PI + FRAC_PI_4;
 /// than ~20 photoreceptors yielding progressively worse results.
 const CELLS: usize = 9;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Eye {
     pub(crate) fov_range: f32,
     pub(crate) fov_angle: f32,
