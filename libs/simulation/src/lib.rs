@@ -21,7 +21,12 @@ impl Simulation {
         &self.world
     }
 
-    pub fn step(&mut self) {
+    pub fn step(&mut self, rng: &mut dyn RngCore) {
+        self.process_collisions(rng);
+        self.process_movements();
+    }
+
+    fn process_movements(&mut self) {
         for animal in &mut self.world.animals {
             animal.position += animal.rotation * na::Vector2::new(0.0, animal.speed); 
             //rotating relative to the y axis, that is: a bird with rotation of 0° will fly upwards. 
@@ -29,6 +34,22 @@ impl Simulation {
             animal.position.x = na::wrap(animal.position.x, 0.0, 1.0);
             animal.position.y = na::wrap(animal.position.y, 0.0, 1.0); 
             //Our map is bounded by <0.0, 1.0>, anything outside wouldd be rendered outside the canvas
+        }
+    }
+
+    fn process_collisions(&mut self, rng: &mut dyn RngCore) {
+        // treating both as spheres
+        for animal in &mut self.world.animals {
+            for food in &mut self.world.foods {
+                let distance = na::distance(
+                    &animal.position,
+                    &food.position,
+                );
+    
+                if distance <= 0.01 {
+                    food.position = rng.gen();
+                }
+            }
         }
     }
 

@@ -23,7 +23,7 @@ impl Simulation {
         serde_wasm_bindgen::to_value(&world).unwrap()
     }
     pub fn step(&mut self) {
-        self.sim.step();
+        self.sim.step(&mut self.rng);
     }
 }
 
